@@ -13,12 +13,17 @@ class Order extends \yii\db\ActiveRecord
         return 'order';
     }
 
+    public function getOrderGoods()
+    {
+        return $this->hasMany(OrderGood::class, ['order_id' => 'id']);
+    }
+
     public function rules()
     {
         return [
             [['name', 'email', 'phone', 'address'], 'required'],
             [['email'], 'email'],
-            [['name', 'email', 'phone', 'address'], 'string', 'max' => 255],
+            [['name', 'email', 'phone', 'address', 'status'], 'string', 'max' => 255],
         ];
     }
 

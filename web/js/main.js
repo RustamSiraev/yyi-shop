@@ -21,6 +21,7 @@ function clearCart(event) {
             type: 'GET',
             success: function (res) {
                 $('#cart .modal-content').html(res);
+                $('.menu-quantity').html('(0)');
             },
             error: function () {
                 alert ('error');
@@ -84,3 +85,17 @@ $('.modal-content').on('click', '.btn-next', function () {
         }
     });
 });
+
+let split = window.location.href.split('/'),
+    id = split[split.length - 1],
+    nav = document.querySelectorAll('.nav-link');
+
+for (let i=0; i<nav.length; i++) {
+    if (nav[i].getAttribute('data-id') == id) {
+        nav[i].classList.add('active');
+        break;
+    } else if (!id) {
+        nav[0].classList.add('active');
+        break;
+    }
+}

@@ -9,6 +9,7 @@ use app\models\OrderGood;
 use yii\web\Controller;
 use app\models\Cart;
 use Yii;
+use yii\helpers\Url;
 
 class CartController extends Controller
 {
@@ -56,24 +57,42 @@ class CartController extends Controller
     {
         $session = Yii::$app->session;
         $session->open();
+        if (!$session['cart.totalPrice']) {
+            return Yii::$app->response->redirect(Url::to('/'));
+        }
         $order = new Order();
         if ($order->load(Yii::$app->request->post())) {
             $order->date = date('Y-m-d H:i:s');
             $order->sum = $session['cart.totalPrice'];
             if ($order->save()) {
-                Yii::$app->mailer->compose()
-                    ->setFrom(['aaa$aaa.ru' => 'test test'])
-                    ->setTo('bbb@bbb.ru')
+                $currentId = $order->id;
+                $this->saveOrderInfo($session['cart'], $currentId);
+                Yii::$app->mailer->compose('order-mail', ['session' => $session, 'order' => $order])
+                    ->setFrom(['sirius0983@mail.ru' => 'test test'])
+                    ->setTo($order->email)
                     ->setSubject('Ваш заказ принят')
                     ->send();
                 $session->remove('cart');
                 $session->remove('cart.totalPrice');
                 $session->remove('cart.totalQuantity');
-                return $this->render('success', compact( 'session'));
+                return $this->render('success', compact( 'session', 'currentId'));
             }
         }
         $this->layout = 'empty-layout';
         return $this->render('order', compact('order', 'session'));
     }
 
+    protected function saveOrderInfo($goods, $orderId)
+    {
+        foreach ($goods as $id=>$good) {
+            $orderInfo = new OrderGood();
+            $orderInfo->order_id = $orderId;
+            $orderInfo->product_id = $id;
+            $orderInfo->name = $good['name'];
+            $orderInfo->price = $good['price'];
+            $orderInfo->quantity = $good['goodQuantity'];
+            $orderInfo->sum = $good['price']*$good['goodQuantity'];
+            $orderInfo->save();
+        }
+    }
 }
